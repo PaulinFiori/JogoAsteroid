@@ -28,7 +28,7 @@ function love.load()
     musicBackground:setVolume(0.8)
     musicBackground:setLooping(true)
 
-    spriteExpInimigo = love.graphics.newImage("sprites/explosao1.jpg")
+    spriteExpInimigo = love.graphics.newImage("sprites/explosao.jpg")
     expInimigo = { }
     expInimigo.x = 0
     expInimigo.y = 0
