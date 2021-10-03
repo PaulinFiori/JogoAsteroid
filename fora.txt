@@ -1,0 +1,10 @@
+love.graphics.circle('fill', asteroid.x, asteroid.y,
+                        asteroidStages[asteroid.stage].radius)
+love.graphics.setColor(0, 1, 1)
+                love.graphics.circle(
+                    'fill',
+                    shipX + math.cos(shipAngle) * shipCircleDistance,
+                    shipY + math.sin(shipAngle) * shipCircleDistance,
+                    5
+                )
+    

@@ -2,6 +2,8 @@ speedBuster = 10
 larguraTela = love.graphics.getWidth() 
 alturaTela = love.graphics.getHeight()
 
+animacao = require("anim8")
+
 function love.load()
     Pontos = 0
     PontosText = ""
@@ -11,7 +13,8 @@ function love.load()
     Fase = 1
     FaseText = ""
     
-    Nave = love.graphics.newImage("/sprites/Nave1.png")
+    Nave = love.graphics.newImage("/sprites/Nave2.png")
+    Asteroid = love.graphics.newImage("/sprites/Asteroid.png")
     BackgroundA = love.graphics.newImage("/sprites/universe2.png")
     BackgroundB = love.graphics.newImage("/sprites/universe2.png")
 
@@ -19,10 +22,18 @@ function love.load()
     shipExplosionSound = love.audio.newSource("Audios/ExplodeNave.wav", "static")
     enemyExplosionSound = love.audio.newSource("Audios/ExplodeInimigo.wav", "static")
     fireSound = love.audio.newSource("Audios/tiro.wav", "static")
+    gameOver = love.audio.newSource("Audios/GameOver.ogg", "static")
 
     musicBackground:play()
     musicBackground:setVolume(0.8)
     musicBackground:setLooping(true)
+
+    spriteExpInimigo = love.graphics.newImage("sprites/explosao1.jpg")
+    expInimigo = { }
+    expInimigo.x = 0
+    expInimigo.y = 0
+    local gridExplosao = animacao.newGrid(64, 64, spriteExpInimigo:getWidth(), spriteExpInimigo:getHeight())
+    ExplodeInimigo = animacao.newAnimation(gridExplosao('1-5', 1, '1-5', 2, '1-5', 3, '1-5', 4, '1-5', 5, '1-5', 6), 0.01, executaAnimacao)
 
     planoFundo =
     {
@@ -100,9 +111,10 @@ end
 
 function love.update(dt)
     local turnSpeed = 10
+    MovimentacaoPlanoFundo(dt)
 
     if continuaJogando then
-    MovimentacaoPlanoFundo(dt)
+    controlaExplosao(dt)
 
     PontosText = "Pontos: " .. Pontos
     FaseText = "Fase: " .. Fase
@@ -154,6 +166,10 @@ function love.update(dt)
                     table.remove(bullets, bulletIndex)
                     enemyExplosionSound:play()
                     Pontos = Pontos + 1;
+
+                    expInimigo.x = asteroid.x
+                    expInimigo.y = asteroid.y
+                    table.insert(expInimigo, ExplodeInimigo)
 
                     if asteroid.stage > 1 then
                         local angle1 = love.math.random() * (2 * math.pi)
@@ -209,6 +225,7 @@ function love.update(dt)
         ) then
             Pontos = 0
             Fase = 1
+
             shipExplosionSound:play()
             continuaJogando = false
             break
@@ -223,6 +240,8 @@ function love.update(dt)
     else
         musicBackground:stop()
         musicBackground:setLooping(false)
+        gameOver:play()
+        gameOver:stop()
     end
 
     if not continuaJogando and love.keyboard.isDown("r") then
@@ -243,22 +262,17 @@ function love.draw()
     end
 
     if continuaJogando then
+
         for y = -1, 1 do
             for x = -1, 1 do
                 love.graphics.origin()
                 love.graphics.translate(x * arenaWidth, y * arenaHeight)
+
+                local shipCircleDistance = 40
                 
                 love.graphics.setColor(1,1,1)
-                love.graphics.draw(Nave, shipX, shipY, shipRadius)
-    
-                local shipCircleDistance = 40
-                love.graphics.setColor(0, 1, 1)
-                love.graphics.circle(
-                    'fill',
-                    shipX + math.cos(shipAngle) * shipCircleDistance,
-                    shipY + math.sin(shipAngle) * shipCircleDistance,
-                    5
-                )
+                love.graphics.draw(Nave, shipX, shipY, shipAngle)
+
     
                 for bulletIndex, bullet in ipairs(bullets) do
                     love.graphics.setColor(0, 1, 0)
@@ -267,8 +281,12 @@ function love.draw()
     
                 for asteroidIndex, asteroid in ipairs(asteroids) do
                     love.graphics.setColor(1, 1, 0)
-                    love.graphics.circle('fill', asteroid.x, asteroid.y,
+                    love.graphics.draw(Asteroid, asteroid.x, asteroid.y,
                         asteroidStages[asteroid.stage].radius)
+                end
+
+                for i, _ in ipairs(expInimigo) do
+                    ExplodeInimigo:draw(spriteExpInimigo, expInimigo.x, expInimigo.y)
                 end
     
                 love.graphics.setColor(255, 0 , 0)
@@ -276,6 +294,7 @@ function love.draw()
     
                 love.graphics.setColor(255, 0 , 0)
                 love.graphics.print(FaseText, love.graphics.getWidth() - 90, 0)
+
             end
         end
     end
@@ -291,5 +310,17 @@ function MovimentacaoPlanoFundo(dt)
 
     if (planoFundo.yB > alturaTela) then
         planoFundo.yB = planoFundo.yA - BackgroundB:getHeight()
+    end
+end
+
+function executaAnimacao()
+    for i, _ in ipairs(expInimigo) do
+        table.remove(expInimigo, i)
+    end
+end
+
+function controlaExplosao(dt)
+    for i, _ in ipairs(expInimigo) do
+        ExplodeInimigo:update(dt)
     end
 end
