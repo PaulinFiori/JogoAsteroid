@@ -23,6 +23,10 @@ function love.draw()
         love.graphics.draw(optionsback, 0, 0)
     end
 
+    if hideStartMenu == true and StartGame == true then
+        Jogo:draw()
+    end
+
     suit.draw()
 
 end 
@@ -38,6 +42,7 @@ function love.update(dt)
             sound:play()
             hideStartMenu = true
             StartGame = true
+            Jogo:initialize()
         end
         if suit.Button("Options", 300,270, 200,35).hit then
             sound:play()
@@ -74,10 +79,7 @@ function love.update(dt)
 
     if hideStartMenu == true and StartGame == true then
         startambient:stop()
-
-        Jogo:initialize()
         Jogo:update(dt)
-        Jogo:draw()
     end
 
 end
